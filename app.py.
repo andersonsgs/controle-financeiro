@@ -1,63 +1,20 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-from datetime import datetime, timedelta
 
-# Configuração da página para mobile e PC
-st.set_page_config(page_title="Finanças Anderson", layout="centered")
-
-st.title("📊 Controle Financeiro Anderson")
+# Configuração simples
+st.set_page_config(page_title="Finanças Anderson")
+st.title("📊 Controle Anderson")
 
 # Link da sua planilha
 url = "https://docs.google.com/spreadsheets/d/1y06RxnrltG1VqHS1pomuY-ZoeND0jBPU8S41OHnUSHc/edit?usp=sharing"
 
-# Conexão com o Google Sheets
+# Conexão
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# --- FORMULÁRIO DE LANÇAMENTO ---
-with st.expander("➕ Registrar Novo Gasto", expanded=True):
-    with st.form("form_gasto"):
-        descricao = st.text_input("Descrição (Ex: Mercado, Conta de Luz)")
-        valor_total = st.number_input("Valor Total R$", min_value=0.0, step=0.01)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            categoria = st.selectbox("Quem?", ["Nosso", "Chiquinho", "Estefania", "Mae", "Sogra"])
-            banco = st.selectbox("Onde?", ["Bradesco", "Credicard", "Mercado Pago", "Porto Seguro", "Dinheiro"])
-        with col2:
-            parcelas = st.number_input("Parcelas", min_value=1, value=1)
-            data_base = st.date_input("Data", datetime.now())
-        
-        btn_salvar = st.form_submit_button("Salvar na Planilha")
-
-if btn_salvar:
-    novos_dados = []
-    valor_parc = valor_total / parcelas
-    
-    for i in range(parcelas):
-        # Calcula o mês da parcela
-        data_parc = data_base + timedelta(days=30*i)
-        linha = {
-            "data": data_parc.strftime("%d/%m/%Y"),
-            "ano": data_parc.year,
-            "mes": data_parc.strftime("%B"),
-            "descricao": f"{descricao} ({i+1}/{parcelas})" if parcelas > 1 else descricao,
-            "tipo": "Variável",
-            "categoria": categoria,
-            "banco": banco,
-            "valor_total": valor_parc,
-            "parcelas": f"{i+1}/{parcelas}"
-        }
-        novos_dados.append(linha)
-    
-    # Lógica para adicionar à planilha existente
-    df_atual = conn.read(spreadsheet=url, worksheet="lancamentos")
-    df_novo = pd.concat([df_atual, pd.DataFrame(novos_dados)], ignore_index=True)
-    conn.update(spreadsheet=url, worksheet="lancamentos", data=df_novo)
-    
-    st.success(f"Registrado! {parcelas} parcela(s) de R$ {valor_parc:.2f} adicionadas.")
-
-# --- RESUMO DO MÊS ---
-st.divider()
-st.subheader("💰 Resumo de Março/2026")
-# Aqui o sistema leria a planilha e mostraria os totais automaticamente
+# Formulário
+with st.form("meu_form"):
+    desc = st.text_input("Descrição")
+    valor = st.number_input("Valor R$", min_value=0.0)
+    if st.form_submit_button("Salvar"):
+        st.success(f"Registrado: {desc} - R$ {valor}")
